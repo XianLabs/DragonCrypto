@@ -1,6 +1,5 @@
 //DragonCrypto - DLL File to be used with DragonClient for encrypting and decrypting packets on DragonNest (works on all world regions)
 //Alex M. Schwarz, 2015
-//Guess where the korean comments are from ;) - better protect your code repos!
 //DragonNest uses static XTEA crypto for Village/TCPServer transactions, key changes each patch.
 //m_TeaKey would look way better as a 2D Array as it's intended, but I wrote this code back in the noob days.
 
@@ -19,18 +18,12 @@ extern "C" void __declspec(dllexport) EncryptTCP(char* pBuf, const UINT uiSize)
 {
 	UINT uiEncodeSize = uiSize;
 
-	// BLOCK크기 계산
 	int iBlockCount = uiSize / 8;
 	if (uiSize%8)
 		iBlockCount++;
 
-	// seed 맞추기
-	//CMtRandom rand;
-	//rand.srand( uiSize );
-
 	UINT y, z, uiSum, uiLimit, uiRound;
-	// round 얻기
-	//uiRound = (rand.rand()%2)+1;
+
 	uiRound = (uiSize % 2) + 1;
 
 	for (int i = 0; i<iBlockCount; i++)
@@ -38,10 +31,9 @@ extern "C" void __declspec(dllexport) EncryptTCP(char* pBuf, const UINT uiSize)
 
 		UINT* pKey = (UINT*)m_TeaKey[uiSize%256];
 
-		uiSum = 0;					//초기화 
+		uiSum = 0;
 		uiLimit = uiRound * 0x9E3779B9;
 
-		// BLOCK 단위 encrypt
 		if (uiEncodeSize >= 8)
 		{
 			memcpy(&y, pBuf + (i*8), sizeof(UINT));
@@ -54,14 +46,12 @@ extern "C" void __declspec(dllexport) EncryptTCP(char* pBuf, const UINT uiSize)
 				uiSum += 0x9E3779B9;
 				z += (y << 4 ^ y >> 5) + y ^ uiSum + pKey[uiSum >> 11 & 3];
 			}
-			// end cycle
-
+		
 			memcpy(pBuf + (i*8), &y, sizeof(UINT));
 			memcpy(pBuf + (i*8) + 4, &z, sizeof(UINT));
 
 			uiEncodeSize -= 8;
 		}
-		// BYTE 단위 encrypt
 		else //edge case for < 8 size.
 		{
 			char* pTempBuf = pBuf + (i*8);
@@ -78,18 +68,12 @@ extern "C" void __declspec(dllexport) DecryptTCP(char* pBuf, const UINT uiSize)
 {
 	UINT uiDecryptSize = uiSize;
 
-	// BLOCK크기 계산
 	int iBlockCount = uiSize / 8;
 	if (uiSize%8)
 		iBlockCount++;
-
-	// seed 맞추기
-	//CMtRandom rand;
-	//rand.srand( uiSize );
-
+	
 	UINT y, z, uiSum, uiRound;
-	// round 얻기
-	//uiRound = (rand.rand()%2)+1;
+
 	uiRound = (uiSize % 2) + 1;
 
 	for (int i = 0; i<iBlockCount; i++)
@@ -97,9 +81,8 @@ extern "C" void __declspec(dllexport) DecryptTCP(char* pBuf, const UINT uiSize)
 		//UINT* pKey = s_TeaKey[rand.rand()%TEA_KEYCOUNT];
 		UINT* pKey = (UINT*)m_TeaKey[uiSize%256];
 
-		uiSum = uiRound * 0x9E3779B9;		// 초기화 
-
-		// BLOCK 단위 decrypt
+		uiSum = uiRound * 0x9E3779B9;		
+	
 		if (uiDecryptSize >= 8)
 		{
 			memcpy(&y, pBuf + (i*8), sizeof(UINT));
@@ -118,8 +101,7 @@ extern "C" void __declspec(dllexport) DecryptTCP(char* pBuf, const UINT uiSize)
 			memcpy(pBuf + (i*8) + 4, &z, sizeof(UINT));
 
 			uiDecryptSize -= 8;
-		}
-		// BYTE 단위 decrypt
+		}	
 		else
 		{
 			char* pTempBuf = pBuf + (i*8);
